@@ -543,10 +543,19 @@
             const isIOS = /ipad|iphone|ipod/.test(ua) && !window.MSStream;
 
             if (isAndroid) {
-                // 🤖 安卓黑科技：直接通过底层 Intent 唤醒系统日历 App (无下载，纯跳转)
-                const intentUrl = `intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.item/event;S.title=${encodeURIComponent(eventTitle)};S.description=${encodeURIComponent(details)};l.beginTime=${start.getTime()};l.endTime=${end.getTime()};end;`;
-                window.location.href = intentUrl;
-            } 
+    const intentUrl = `intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.item/event;S.title=${encodeURIComponent(eventTitle)};S.description=${encodeURIComponent(details)};l.beginTime=${start.getTime()};l.endTime=${end.getTime()};end;`;
+
+    const a = document.createElement('a');
+    a.href = intentUrl;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    // ⛑️ 兜底：1.5秒后提示
+    setTimeout(() => {
+        alert("如果没有打开日历，请在浏览器中打开本页面再试");
+    }, 1500);
+}
             else if (isIOS) {
                 // 🍎 苹果方案：借用公共 API 返回日历流，完美触发 iOS 底部弹窗
                 const fmt = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
