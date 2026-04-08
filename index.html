@@ -268,6 +268,19 @@
         }
 
         /* 为顶级版本答案增加的特殊高亮 */
+
+
+        /* ================= 手机端整体等比缩放 ================= */
+        @media screen and (max-width: 768px) {
+            body {
+                /* 0.85 表示缩小到原来的 85%，你可以换成 0.8(更小) 或 0.9(微调) */
+                zoom: 0.80; 
+            }
+            .container {
+                /* 稍微减小屏幕左右边缘的留白，给中间卡片让出更多空间 */
+                padding: 10px; 
+            }
+        }
     </style>
 </head>
 
@@ -563,7 +576,7 @@
         function formatMinsToText(mins) {
             const h = Math.floor(mins / 60);
             const m = Math.floor(mins % 60);
-            return (h > 0 ? h + "小时" : "") + (m > 0 ? m + "分钟" : "");
+            return (h > 0 ? h + "h" : "") + (m > 0 ? m + "m" : "");
         }
 
         function formatDisplayDate(dateObj) {
