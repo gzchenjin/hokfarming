@@ -530,54 +530,33 @@
             generateTimeline();
         }
 
-        // ================= 终极日历唤醒方案 (安卓原生 + iOS骗过 + PC下载) =================
+        // ================= 极简日历方案 (拒绝下载文件，不行就拉倒) =================
         function createAlarm(title, timestamp) {
             const start = new Date(timestamp);
             const end = new Date(timestamp + 5 * 60000); // 持续 5 分钟
             const eventTitle = `🌾 ${title}`;
             const details = '机要通提醒：水缸已干 / 极限秒熟，马上淋水！';
 
-            // 识别用户设备
             const ua = navigator.userAgent.toLowerCase();
-            const isAndroid = ua.indexOf("android") > -1;
+            const isWeChat = ua.includes('micromessenger');
             const isIOS = /ipad|iphone|ipod/.test(ua) && !window.MSStream;
 
-            if (isAndroid) {
-    const intentUrl = `intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.item/event;S.title=${encodeURIComponent(eventTitle)};S.description=${encodeURIComponent(details)};l.beginTime=${start.getTime()};l.endTime=${end.getTime()};end;`;
+            // 1. 微信环境：被劫持，指引跳出
+            if (isWeChat) {
+                alert("⚠️ 微信、安卓无法使用该功能");
+                return;
+            }
 
-    const a = document.createElement('a');
-    a.href = intentUrl;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    // ⛑️ 兜底：1.5秒后提示
-    setTimeout(() => {
-        alert("如果没有打开日历，请在浏览器中打开本页面再试");
-    }, 1500);
-}
-            else if (isIOS) {
-                // 🍎 苹果方案：借用公共 API 返回日历流，完美触发 iOS 底部弹窗
+            // 2. 苹果 iOS：无下载行为，借用接口完美拉起系统自带的添加卡片
+            if (isIOS) {
                 const fmt = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
                 const url = `https://ics.agical.io/?subject=${encodeURIComponent(eventTitle)}&description=${encodeURIComponent(details)}&dtstart=${fmt(start)}&dtend=${fmt(end)}&reminder=0`;
                 window.location.href = url;
-            } 
-            else {
-                // 💻 电脑端方案：标准的 ics 文件下载
-                const pad = n => n < 10 ? '0' + n : n;
-                const fmtPC = d => d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
-                const icsData = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//王者农场//机要通//CN\nBEGIN:VEVENT\nDTSTART:${fmtPC(start)}\nDTEND:${fmtPC(end)}\nSUMMARY:${eventTitle}\nDESCRIPTION:${details}\nBEGIN:VALARM\nTRIGGER:-PT0M\nACTION:DISPLAY\nDESCRIPTION:Reminder\nEND:VALARM\nEND:VEVENT\nEND:VCALENDAR`;
-                
-                const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `农场提醒_${title}.ics`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
+                return;
             }
+
+            // 3. 安卓与电脑端：坚决不下载文件，直接告知无法设置
+            alert("💡 安卓无法使用该功能，手动定个闹钟吧！");
         }
 
         function generateTimeline() {
@@ -610,7 +589,7 @@
             document.getElementById('offset3').innerText = `种下后 +${formatMinsToText(m3)}`;
 
             document.getElementById('time4').innerText = formatDisplayDate(t4);
-            document.getElementById('offset4').innerText = `完美收割！耗时：${formatMinsToText(m4)}`;
+            document.getElementById('offset4').innerText = `完美收割！${formatMinsToText(m4)}`;
 
             // 渲染一键设置日历按钮
             document.getElementById('alarmBox2').innerHTML = `<button class="alarm-btn" onclick="createAlarm('第2次补水', ${t2.getTime()})">⏰ 设日历提醒</button>`;
