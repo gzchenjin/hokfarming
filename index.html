@@ -270,16 +270,27 @@
         /* 为顶级版本答案增加的特殊高亮 */
 
 
-        /* ================= 手机端整体等比缩放 ================= */
+        /* ================= 手机端精准缩放适配 (兼容所有浏览器) ================= */
         @media screen and (max-width: 768px) {
-            body {
-                /* 0.85 表示缩小到原来的 85%，你可以换成 0.8(更小) 或 0.9(微调) */
-                zoom: 0.80; 
+            body { padding: 8px; } /* 缩小页面边缘留白 */
+            .card { padding: 16px; margin-bottom: 16px; } /* 缩小卡片内边距 */
+            h1 { font-size: 22px; margin-bottom: 20px; } /* 缩小主标题 */
+            .card-title { font-size: 16px; margin-bottom: 12px; } /* 缩小副标题 */
+            
+            /* 缩小输入框和下拉菜单 */
+            select, input[type="number"], input[type="datetime-local"] { 
+                font-size: 14px; padding: 8px; 
             }
-            .container {
-                /* 稍微减小屏幕左右边缘的留白，给中间卡片让出更多空间 */
-                padding: 10px; 
-            }
+            /* 缩小排期器的 4 个按钮 */
+            .time-btn { font-size: 13px; padding: 8px 0; }
+            
+            /* 缩小数据表格 */
+            table { font-size: 12px; }
+            th, td { padding: 8px 6px; }
+            
+            /* 缩小顶部的个人名片 */
+            .card > div[style*="font-size: 48px"] { font-size: 36px !important; padding: 8px !important; }
+            .card > div > h3 { font-size: 18px !important; }
         }
     </style>
 </head>
