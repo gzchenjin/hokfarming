@@ -530,33 +530,23 @@
             generateTimeline();
         }
 
-        // 核心：生成日历闹钟文件
+        // ================= 国内特供版：借用公共 API 完美唤醒 iOS 日历 =================
         function createAlarm(title, timestamp) {
-            const date = new Date(timestamp);
-            const end = new Date(timestamp + 5 * 60000);
-            const pad = n => n < 10 ? '0' + n : n;
-            const fmt = d => d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+            const start = new Date(timestamp);
+            const end = new Date(timestamp + 5 * 60000); // 持续 5 分钟
 
-            const icsData = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//王者农场//机要通//CN\nBEGIN:VEVENT\nDTSTART:${fmt(date)}\nDTEND:${fmt(end)}\nSUMMARY:🌾 ${title}\nDESCRIPTION:王者农场排程提醒！请前往游戏操作。\nBEGIN:VALARM\nTRIGGER:-PT0M\nACTION:DISPLAY\nDESCRIPTION:Reminder\nEND:VALARM\nEND:VEVENT\nEND:VCALENDAR`;
+            // 转换为标准的 UTC 时间格式 (YYYYMMDDTHHmmssZ)
+            const fmt = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 
-            // 苹果 iOS 特殊判定方案
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            
-            if (isIOS) {
-                // 苹果系统直接通过 URI 唤醒日历 App
-                window.location.href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(icsData);
-            } else {
-                // 安卓 / 电脑端标准 Blob 下载方案
-                const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `农场提醒_${title}.ics`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-            }
+            const eventTitle = encodeURIComponent(`🌾 ${title}`);
+            const details = encodeURIComponent('机要通提醒：水缸已干 / 极限秒熟，马上淋水！');
+
+            // 核心黑科技：利用 agical.io 免费接口，伪装成真实的后端请求
+            // 这个域名国内直连，且返回的 Content-Type 是 text/calendar，能完美击穿 iOS 防线
+            const url = `https://ics.agical.io/?subject=${eventTitle}&description=${details}&dtstart=${fmt(start)}&dtend=${fmt(end)}&reminder=0`;
+
+            // 对于这种文件流请求，直接改变 href 是最稳的做法，不会被浏览器当成广告拦截
+            window.location.href = url;
         }
 
         function generateTimeline() {
