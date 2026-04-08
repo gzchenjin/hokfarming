@@ -530,23 +530,45 @@
             generateTimeline();
         }
 
-        // ================= 国内特供版：借用公共 API 完美唤醒 iOS 日历 =================
+        // ================= 终极日历唤醒方案 (安卓原生 + iOS骗过 + PC下载) =================
         function createAlarm(title, timestamp) {
             const start = new Date(timestamp);
             const end = new Date(timestamp + 5 * 60000); // 持续 5 分钟
+            const eventTitle = `🌾 ${title}`;
+            const details = '机要通提醒：水缸已干 / 极限秒熟，马上淋水！';
 
-            // 转换为标准的 UTC 时间格式 (YYYYMMDDTHHmmssZ)
-            const fmt = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            // 识别用户设备
+            const ua = navigator.userAgent.toLowerCase();
+            const isAndroid = ua.indexOf("android") > -1;
+            const isIOS = /ipad|iphone|ipod/.test(ua) && !window.MSStream;
 
-            const eventTitle = encodeURIComponent(`🌾 ${title}`);
-            const details = encodeURIComponent('机要通提醒：水缸已干 / 极限秒熟，马上淋水！');
-
-            // 核心黑科技：利用 agical.io 免费接口，伪装成真实的后端请求
-            // 这个域名国内直连，且返回的 Content-Type 是 text/calendar，能完美击穿 iOS 防线
-            const url = `https://ics.agical.io/?subject=${eventTitle}&description=${details}&dtstart=${fmt(start)}&dtend=${fmt(end)}&reminder=0`;
-
-            // 对于这种文件流请求，直接改变 href 是最稳的做法，不会被浏览器当成广告拦截
-            window.location.href = url;
+            if (isAndroid) {
+                // 🤖 安卓黑科技：直接通过底层 Intent 唤醒系统日历 App (无下载，纯跳转)
+                const intentUrl = `intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.item/event;S.title=${encodeURIComponent(eventTitle)};S.description=${encodeURIComponent(details)};l.beginTime=${start.getTime()};l.endTime=${end.getTime()};end;`;
+                window.location.href = intentUrl;
+            } 
+            else if (isIOS) {
+                // 🍎 苹果方案：借用公共 API 返回日历流，完美触发 iOS 底部弹窗
+                const fmt = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                const url = `https://ics.agical.io/?subject=${encodeURIComponent(eventTitle)}&description=${encodeURIComponent(details)}&dtstart=${fmt(start)}&dtend=${fmt(end)}&reminder=0`;
+                window.location.href = url;
+            } 
+            else {
+                // 💻 电脑端方案：标准的 ics 文件下载
+                const pad = n => n < 10 ? '0' + n : n;
+                const fmtPC = d => d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+                const icsData = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//王者农场//机要通//CN\nBEGIN:VEVENT\nDTSTART:${fmtPC(start)}\nDTEND:${fmtPC(end)}\nSUMMARY:${eventTitle}\nDESCRIPTION:${details}\nBEGIN:VALARM\nTRIGGER:-PT0M\nACTION:DISPLAY\nDESCRIPTION:Reminder\nEND:VALARM\nEND:VEVENT\nEND:VCALENDAR`;
+                
+                const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `农场提醒_${title}.ics`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }
         }
 
         function generateTimeline() {
