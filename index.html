@@ -2065,19 +2065,19 @@
 
       <div class="acc-td" style="position: relative; width: 100%; height: 100%;">
         <div class="time-display ${isTimeDanger(acc.water1, acc.water1_ts) ? 'danger' : ''}">${acc.water1 || '--:--'}</div>
-        <input type="time" class="acc-time-overlay" value="${acc.water1 || ''}" onchange="updateAccField(${index},'water1',this.value)">
+        <input type="time" class="acc-time-overlay" value="${acc.water1 || ''}" oninput="updateAccField(${index}, 'water1', this.value, this)">
         ${acc.water1 ? `<div class="clear-badge" onclick="updateAccField(${index}, 'water1', ''); event.stopPropagation();">×</div>` : ''}
       </div>
 
       <div class="acc-td" style="position: relative; width: 100%; height: 100%;">
         <div class="time-display ${isTimeDanger(acc.water2, acc.water2_ts) ? 'danger' : ''}">${acc.water2 || '--:--'}</div>
-        <input type="time" class="acc-time-overlay" value="${acc.water2 || ''}" onchange="updateAccField(${index},'water2',this.value)">
+        <input type="time" class="acc-time-overlay" value="${acc.water2 || ''}" oninput="updateAccField(${index}, 'water2', this.value, this)">
         ${acc.water2 ? `<div class="clear-badge" onclick="updateAccField(${index}, 'water2', ''); event.stopPropagation();">×</div>` : ''}
       </div>
 
       <div class="acc-td" style="position: relative; width: 100%; height: 100%;">
         <div class="time-display ${isTimeDanger(acc.harvest, acc.harvest_ts) ? 'danger' : ''}">${acc.harvest || '--:--'}</div>
-        <input type="time" class="acc-time-overlay" value="${acc.harvest || ''}" onchange="updateAccField(${index},'harvest',this.value)">
+        <input type="time" class="acc-time-overlay" value="${acc.harvest || ''}" oninput="updateAccField(${index}, 'harvest', this.value, this)">
         ${acc.harvest ? `<div class="clear-badge" onclick="updateAccField(${index}, 'harvest', ''); event.stopPropagation();">×</div>` : ''}
       </div>
       
@@ -2161,36 +2161,49 @@
 
 
 
-    function updateAccField(i, f, v) {
+    function updateAccField(i, f, v, el) {
       window.accounts[i][f] = v;
-
-      // 1. 如果修改的是时间，清空系统时间戳，并重绘表格
+      
+      // 1. 如果修改的是时间
       if (f.startsWith('water') || f === 'harvest') {
         window.accounts[i][f + '_ts'] = null;
         saveAccs();
-        renderAccountManager();
+        
+        // 🌟 终极保护：如果是转动轮盘触发的，绝不重绘表格，防止轮盘消失！
+        if (el) {
+          const td = el.parentElement;
+          // 局部更新文字
+          const displayDiv = td.querySelector('.time-display');
+          if (displayDiv) displayDiv.innerText = v || '--:--';
+          
+          // 动态显示/隐藏右上角的小叉号
+          let badge = td.querySelector('.clear-badge');
+          if (v && !badge) {
+            td.insertAdjacentHTML('beforeend', `<div class="clear-badge" onclick="updateAccField(${i}, '${f}', ''); event.stopPropagation();">×</div>`);
+          } else if (!v && badge) {
+            badge.remove();
+          }
+        } else {
+          // 如果没有传 el，说明是你点击了小叉号清空的，直接重绘表格即可
+          renderAccountManager();
+        }
         return;
       }
 
       saveAccs();
-
-      // 获取当前行
+      
+      // 其他字段的局部更新逻辑保持不变
       const row = document.getElementById('accountListBody').children[i];
       if (!row) return;
 
-      // 2. 名字实时同步下拉框
-      if (f === 'name') {
-        updateSyncDropdowns();
-      }
+      if (f === 'name') updateSyncDropdowns();
 
-      // 3. 祝福：实时控制名字变灰逻辑（保护键盘）
       if (f === 'blessing') {
         const isDone = window.accounts[i].taskDone && (parseInt(window.accounts[i].blessing) === 0);
         if (isDone) row.classList.add('name-completed');
         else row.classList.remove('name-completed');
       }
 
-      // 4. 🌟 作物：实时控制背景满格变黄（保护键盘）
       if (f === 'fruit') {
         const fruitTd = row.querySelector('.fruit-td');
         if (v.trim() !== '') fruitTd.classList.add('has-fruit');
