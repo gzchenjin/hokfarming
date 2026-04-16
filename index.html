@@ -2196,12 +2196,18 @@
       window.lpTimer = setTimeout(() => {
         window.lpFired = true; 
         
-        // 祝福专属归零
         if (field === 'blessing') {
+          // 1. 修改底层数据
           window.accounts[index].blessing = 0;
           saveAccs();
           
-          // 局部更新样式，保护键盘不掉
+          // 2. 🌟 修复关键：把表面输入框的数字也改成 0！
+          if (e && e.target) {
+            e.target.value = 0;
+            e.target.blur(); // 顺便让输入框失去焦点，防止弹键盘
+          }
+          
+          // 3. 局部更新同行样式，保护键盘不掉
           const row = document.getElementById('accountListBody').children[index];
           if (row) {
             const isDone = window.accounts[index].taskDone && (parseInt(window.accounts[index].blessing) === 0);
@@ -2209,9 +2215,6 @@
             else row.classList.remove('name-completed');
           }
           if (navigator.vibrate) navigator.vibrate(50); // 震动反馈
-          
-          // 强制让输入框失去焦点，防止长按后弹键盘
-          if (e && e.target) e.target.blur(); 
         }
       }, 600);
     }
@@ -2241,7 +2244,7 @@
 
 
 
-    function updateAccField(i, f, v, el) {
+   function updateAccField(i, f, v, el) {
       window.accounts[i][f] = v;
       
       // 1. 如果修改的是时间
@@ -2249,22 +2252,21 @@
         window.accounts[i][f + '_ts'] = null;
         saveAccs();
         
-        // 🌟 终极保护：如果是转动轮盘触发的，绝不重绘表格，防止轮盘消失！
         if (el) {
           const td = el.parentElement;
           // 局部更新文字
           const displayDiv = td.querySelector('.time-display');
           if (displayDiv) displayDiv.innerText = v || '--:--';
           
-          // 动态显示/隐藏右上角的小叉号
-          let badge = td.querySelector('.clear-badge');
-          if (v && !badge) {
-            td.insertAdjacentHTML('beforeend', `<div class="clear-badge" onclick="updateAccField(${i}, '${f}', ''); event.stopPropagation();">×</div>`);
-          } else if (!v && badge) {
-            badge.remove();
+          // 🌟 清除冗余：动态显示/隐藏“全透明隐形层” (彻底抛弃旧版小叉号)
+          let layer = td.querySelector('.invisible-clear-layer');
+          if (v && !layer) {
+            td.insertAdjacentHTML('beforeend', `<div class="invisible-clear-layer" onclick="updateAccField(${i}, '${f}', ''); event.stopPropagation();"></div>`);
+          } else if (!v && layer) {
+            layer.remove();
           }
         } else {
-          // 如果没有传 el，说明是你点击了小叉号清空的，直接重绘表格即可
+          // 如果是清空操作，重绘表格
           renderAccountManager();
         }
         return;
@@ -2272,7 +2274,7 @@
 
       saveAccs();
       
-      // 其他字段的局部更新逻辑保持不变
+      // 其他字段局部更新...
       const row = document.getElementById('accountListBody').children[i];
       if (!row) return;
 
@@ -2290,6 +2292,7 @@
         else fruitTd.classList.remove('has-fruit');
       }
     }
+
 
 
     function toggleAccTask(i) { window.accounts[i].taskDone = !window.accounts[i].taskDone; saveAccs(); renderAccountManager(); }
@@ -2310,7 +2313,8 @@
     Object.assign(window, {
       addNewAccount, deleteAcc, updateAccField, toggleAccTask,
       resetDailyAll, resetAccRow, moveAcc, syncTimelineToAccount, syncCalcToAccount,
-      startLongPress, cancelLongPress,
+      // 🌟 清理更新了正确的触摸事件函数名
+      startTouch, cancelTouch, preventClickIfLongPress
     });
 
 
