@@ -9,7 +9,8 @@
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
   <meta name="referrer" content="no-referrer-when-downgrade" />
   <title>王者农场专业务农 | 极限收割计划</title>
-  <style>
+<style>
+    /* ================= 1. 全局变量与基础 ================= */
     :root {
       --primary: #2e7d32;
       --primary-light: #e8f5e9;
@@ -44,7 +45,7 @@
       font-size: 28px;
     }
 
-    /* ================= 卡片与折叠系统 ================= */
+    /* ================= 2. 卡片与折叠系统 ================= */
     .card {
       background: var(--card-bg);
       border-radius: 12px;
@@ -84,9 +85,9 @@
       display: none !important;
     }
 
-    /* 卡片折叠时，三角形转为向上，符合收起直觉 */
+    /* 折叠时，三角形转为向上 */
     .card-collapsed .toggle-icon {
-      transform: rotate(90deg); 
+      transform: rotate(180deg); 
     }
 
     .card-collapsed .card-header-flex {
@@ -95,33 +96,15 @@
       padding: 0;
     }
 
-    /* ================= 表单与输入框 (Safari 完美兼容) ================= */
-    .form-group {
-      margin-bottom: 16px;
-    }
+    /* ================= 3. 表单与输入框 ================= */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-weight: bold; margin-bottom: 8px; color: var(--text-main); }
+    .input-row { display: flex; gap: 12px; align-items: center; }
+    .input-addon { color: var(--text-muted); font-weight: bold; }
 
-    .form-group label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 8px;
-      color: var(--text-main);
-    }
-
-    .input-row {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .input-addon {
-      color: var(--text-muted);
-      font-weight: bold;
-    }
-
-    /* 强制所有表单元素同高同框，剥离苹果默认样式 */
+    /* 常规输入框剥离苹果默认样式，保持 40px 等高 */
     select,
     input[type="number"],
-    input[type="datetime-local"],
     input[type="text"] {
       height: 40px !important;
       padding: 0 10px !important;
@@ -136,301 +119,105 @@
       color: var(--text-main);
     }
 
-    .input-row input {
-      flex: 1;
+    /* 种下时间专属：保留苹果原生唤醒能力，不加 -webkit-appearance:none */
+    input[type="datetime-local"] {
+      height: 40px !important;
+      padding: 0 10px !important;
+      border: 1px solid var(--border);
+      border-radius: 8px !important;
+      font-size: 14px;
+      width: 100%;
+      box-sizing: border-box;
+      background-color: #fff;
+      font-family: inherit;
+      color: var(--text-main);
     }
+    
+    .input-row input { flex: 1; }
 
-    /* ================= 按钮系统 ================= */
-    .btn-group {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
+    /* ================= 4. 按钮系统 ================= */
+    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
 
     .time-btn {
-      flex: 1;
-      min-width: 60px;
-      padding: 10px 0;
-      border: 1px solid var(--primary);
-      background: transparent;
-      color: var(--primary);
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: bold;
-      transition: all 0.2s;
+      flex: 1; min-width: 60px; padding: 10px 0;
+      border: 1px solid var(--primary); background: transparent;
+      color: var(--primary); border-radius: 6px; cursor: pointer;
+      font-size: 14px; font-weight: bold; transition: all 0.2s;
     }
+    .time-btn.active { background: var(--primary); color: white; }
 
-    .time-btn.active {
-      background: var(--primary);
-      color: white;
+    /* 同步、保存、Now 等主要操作按钮 */
+    .sync-btn, .now-btn {
+      height: 40px !important; padding: 0 15px !important; margin: 0;
+      background: var(--primary) !important; color: #fff !important;
+      font-weight: bold; cursor: pointer; border: none !important;
+      border-radius: 8px !important; white-space: nowrap;
+      display: inline-flex; align-items: center; justify-content: center;
+      box-sizing: border-box; transition: all 0.2s;
     }
+    .sync-btn:active, .now-btn:active { transform: scale(0.95); opacity: 0.9; }
 
-    /* 1. 主要操作按钮（同步、Now、保存等大按钮） */
-    .sync-btn,
-    .now-btn {
-      height: 40px !important;
-      padding: 0 15px !important;
-      margin: 0;
-      background: var(--primary) !important;
-      color: #fff !important;
-      font-weight: bold;
-      cursor: pointer;
-      border: none !important;
-      border-radius: 8px !important;
-      white-space: nowrap;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      box-sizing: border-box;
-      transition: all 0.2s;
-    }
-
-    .sync-btn:active,
-    .now-btn:active {
-      transform: scale(0.95);
-      opacity: 0.9;
-    }
-
-    /* 2. 恢复【设日历按钮】的温柔小巧风格 */
+    /* 温柔的日历小按钮 */
     .alarm-btn {
-      margin-top: 8px !important;
-      padding: 6px 0 !important;
-      font-size: 11px !important;
-      font-weight: bold;
-      color: var(--primary) !important;
-      background: var(--primary-light) !important;
-      border: none !important;
-      border-radius: 6px !important;
-      cursor: pointer;
-      transition: 0.2s;
-      width: 100% !important;
-      height: auto !important;
-      /* 解除大按钮的高度限制 */
-      letter-spacing: -0.5px;
-      display: block !important;
+      margin-top: 8px !important; padding: 6px 0 !important;
+      font-size: 11px !important; font-weight: bold;
+      color: var(--primary) !important; background: var(--primary-light) !important;
+      border: none !important; border-radius: 6px !important;
+      cursor: pointer; transition: 0.2s; width: 100% !important;
+      height: auto !important; letter-spacing: -0.5px; display: block !important;
     }
+    .alarm-btn:hover { background: #c8e6c9 !important; }
+    .alarm-btn-danger { color: var(--danger) !important; background: #ffebee !important; }
+    .alarm-btn-danger:hover { background: #ffcdd2 !important; }
 
-    .alarm-btn:hover {
-      background: #c8e6c9 !important;
-    }
+    /* ================= 5. 数据中心表格与排期器 ================= */
+    #resultPanel { display: none; padding: 20px; border-radius: 8px; margin-top: 20px; font-size: 16px; }
+    .alert-danger { background-color: #ffebee; color: var(--danger); border: 1px solid #ffcdd2; }
+    .alert-warning { background-color: #fff3e0; color: var(--warning); border: 1px solid #ffe0b2; }
+    .alert-success { background-color: var(--primary-light); color: var(--primary); border: 1px solid #c8e6c9; }
+    .alarm-time { font-size: 28px; font-weight: bold; display: block; margin: 12px 0; }
 
-    .alarm-btn-danger {
-      color: var(--danger) !important;
-      background: #ffebee !important;
-    }
+    .timeline-container { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+    .timeline-container::-webkit-scrollbar { display: none; }
+    .timeline-card { flex: 1; min-width: 0; background: #fafafa; border-radius: 8px; padding: 10px 4px; text-align: center; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04); }
 
-    .alarm-btn-danger:hover {
-      background: #ffcdd2 !important;
-    }
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background-color: var(--primary-light); color: var(--primary); font-weight: bold; cursor: pointer; user-select: none; }
+    th:hover { background-color: #c8e6c9; }
+    .row-hover:hover { background-color: #f9f9f9; }
+    .highlight-data { font-weight: bold; color: var(--danger); }
+    .pmo-warning { color: #999; }
+    .pmo-star { font-weight: bold; color: var(--primary); background-color: #fff8e1; }
+    .pmo-crown { font-weight: bold; color: #d84315; background-color: #ffcc80; }
 
-    /* ================= 结果面板与排期 ================= */
-    #resultPanel {
-      display: none;
-      padding: 20px;
-      border-radius: 8px;
-      margin-top: 20px;
-      font-size: 16px;
-    }
+    .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 15px; overflow-x: auto; scrollbar-width: none; white-space: nowrap; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn { padding: 10px 16px; font-size: 14px; font-weight: bold; color: var(--text-muted); background: none; border: none; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap; }
+    .tab-btn:hover { color: var(--primary); }
+    .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+    .tab-content { display: none; animation: fadeIn 0.3s ease; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-    .alert-danger {
-      background-color: #ffebee;
-      color: var(--danger);
-      border: 1px solid #ffcdd2;
-    }
-
-    .alert-warning {
-      background-color: #fff3e0;
-      color: var(--warning);
-      border: 1px solid #ffe0b2;
-    }
-
-    .alert-success {
-      background-color: var(--primary-light);
-      color: var(--primary);
-      border: 1px solid #c8e6c9;
-    }
-
-    .alarm-time {
-      font-size: 28px;
-      font-weight: bold;
-      display: block;
-      margin: 12px 0;
-    }
-
-    .timeline-container {
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      padding-bottom: 5px;
-      scrollbar-width: none;
-    }
-
-    .timeline-container::-webkit-scrollbar {
-      display: none;
-    }
-
-    .timeline-card {
-      flex: 1;
-      min-width: 0;
-      background: #fafafa;
-      border-radius: 8px;
-      padding: 10px 4px;
-      text-align: center;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-    }
-
-    /* ================= 静态数据表 ================= */
-    .table-wrapper {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      min-width: 600px;
-    }
-
-    th,
-    td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-
-    th {
-      background-color: var(--primary-light);
-      color: var(--primary);
-      font-weight: bold;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    th:hover {
-      background-color: #c8e6c9;
-    }
-
-    .row-hover:hover {
-      background-color: #f9f9f9;
-    }
-
-    .highlight-data {
-      font-weight: bold;
-      color: var(--danger);
-    }
-
-    .pmo-warning {
-      color: #999;
-    }
-
-    .pmo-star {
-      font-weight: bold;
-      color: var(--primary);
-      background-color: #fff8e1;
-    }
-
-    .pmo-crown {
-      font-weight: bold;
-      color: #d84315;
-      background-color: #ffcc80;
-    }
-
-    /* ================= 数据中心 Tab ================= */
-    .tabs {
-      display: flex;
-      border-bottom: 2px solid var(--border);
-      margin-bottom: 15px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      white-space: nowrap;
-    }
-
-    .tabs::-webkit-scrollbar {
-      display: none;
-    }
-
-    .tab-btn {
-      padding: 10px 16px;
-      font-size: 14px;
-      font-weight: bold;
-      color: var(--text-muted);
-      background: none;
-      border: none;
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-
-    .tab-btn:hover {
-      color: var(--primary);
-    }
-
-    .tab-btn.active {
-      color: var(--primary);
-      border-bottom: 3px solid var(--primary);
-    }
-
-    .tab-content {
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(5px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* ================= 账号管家 - 极致紧凑兼容 ================= */
-    .account-manager-card {
-      padding: 16px 10px !important;
-    }
-
+    /* ================= 6. 账号管家 - 极致紧凑兼容 ================= */
+    .account-manager-card { padding: 16px 10px !important; }
+    
     .ios-btn {
-      height: 28px;
-      padding: 0 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      height: 28px; padding: 0 10px; border-radius: 6px;
+      font-size: 12px; font-weight: bold; border: none; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
     }
+    .btn-reset { background: #fff; color: #d32f2f; border: 1px solid #ff4d4f; }
+    .btn-add { background: #2e7d32; color: #fff; }
 
-    .btn-reset {
-      background: #fff;
-      color: #d32f2f;
-      border: 1px solid #ff4d4f;
-    }
+    .account-table { width: 100% !important; min-width: 100% !important; }
 
-    .btn-add {
-      background: #2e7d32;
-      color: #fff;
-    }
-
-    .account-table {
-      width: 100% !important;
-      min-width: 100% !important;
-    }
-
-    /* 11列黄金比例，绝不缩放，防 Safari 撑破 */
+    /* 11列黄金比例，分配更均匀 */
     .acc-tr {
       display: grid !important;
-      grid-template-columns: 8% 15% 8% 8% 12% 10% 10% 10% 7% 5% 7% !important;
+      grid-template-columns: 8% 15% 8% 8% 12% 10% 10% 10% 6.5% 6% 6.5% !important;
       align-items: center;
       border-bottom: 1px solid #f2f2f2;
       min-height: 40px;
@@ -438,200 +225,99 @@
 
     .acc-td {
       padding: 4px 1px !important;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      box-sizing: border-box;
-      overflow: hidden;
+      display: flex; justify-content: center; align-items: center;
+      width: 100%; box-sizing: border-box; overflow: hidden;
     }
-
+    
+    /* 基础内部输入框 */
     .acc-td input {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: transparent;
-      text-align: center;
-      font-size: 11px !important;
-      padding: 0 !important;
-      color: #333;
-      outline: none;
-      -webkit-appearance: none;
+      width: 100%; height: 100%; border: none; background: transparent;
+      text-align: center; font-size: 11px !important; padding: 0 !important;
+      color: #333; outline: none; -webkit-appearance: none; box-sizing: border-box;
     }
 
-    /* 仅名字一列的单元格背景变灰（满格铺满），文字保持原样，不划线不褪色 */
-    .name-completed .name-td {
-      background-color: #e5e5ea !important;
-    }
+    /* 状态满格变色（名字变灰 / 作物变黄） */
+    .name-completed .name-td { background-color: #e5e5ea !important; }
+    .has-fruit { background-color: #fffac0 !important; }
 
-    /* 作物列有内容时，单元格背景变黄（满格铺满） */
-    .has-fruit {
-      background-color: #fffac0 !important;
-    }
-
-
-
+    /* 任务复选框 */
     .custom-cb {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      border: 1px solid #c7c7cc;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      transition: 0.2s;
+      width: 16px; height: 16px; border-radius: 50%; border: 1px solid #c7c7cc;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 10px; transition: 0.2s;
     }
+    .custom-cb.checked { background: #07c160; border-color: #07c160; color: #fff; }
 
-    .custom-cb.checked {
-      background: #07c160;
-      border-color: #07c160;
-      color: #fff;
+    /* ================= 7. 完美的统一正方形操作按钮 ================= */
+    .icon-btn {
+      background: #f4f5f9; border: none; border-radius: 6px;
+      width: 28px !important; height: 28px !important; 
+      cursor: pointer; font-size: 14px;
+      display: flex; justify-content: center; align-items: center;
+      padding: 0; color: #666; transition: 0.2s;
     }
+    .icon-btn:active { background: #e0e0e0; transform: scale(0.95); }
+    .icon-btn-danger { color: #ff4d4f; background: #fff1f0; }
+    .icon-btn-danger:active { background: #ffcdd2; }
 
-   /* 原生时间选框：防 Safari 偏移与手机端【轮盘失效】的终极修复 */
-    input[type="time"].acc-time-input {
-      background: transparent !important;
-      border: none !important;
-      font-size: 13px !important;
-      color: #07c160;
-      font-weight: bold;
-      text-align: center;
-      padding: 0 !important;
-      margin: 0;
-      width: 100%;
-      outline: none;
-      position: relative; /* 核心：必须有相对定位 */
-      /* ⚠️ 绝对不能加 -webkit-appearance: none; 否则苹果轮盘必死 */
+    .sort-btn-group {
+      display: flex; flex-direction: column; width: 28px; height: 28px;
+      border-radius: 6px; overflow: hidden; background: #f4f5f9;
     }
-
-    /* 🌟 把触发轮盘的系统图标变成全透明，并铺满整个单元格 */
-    input[type="time"].acc-time-input::-webkit-calendar-picker-indicator {
-      display: block !important;
-      position: absolute;
-      top: 0; 
-      left: 0; 
-      width: 100%; 
-      height: 100%;
-      opacity: 0; /* 完全透明，但是存在，点击必触发轮盘 */
-      cursor: pointer;
-      background: transparent;
-      color: transparent;
+    .sort-btn {
+      flex: 1; border: none; background: transparent; color: #666;
+      font-size: 10px; cursor: pointer; display: flex;
+      justify-content: center; align-items: center; padding: 0;
     }
+    .sort-btn:active { background: #dcdcdc; }
+    .sort-btn:first-child { border-bottom: 1px solid #fff; }
 
-    input[type="time"].acc-time-input.danger {
-      color: #ff4d4f !important;
-      background: rgba(255, 77, 79, 0.1) !important;
-      border-radius: 4px;
-      animation: dangerPulse 2s infinite;
+    /* ================= 8. 终极时间选择器：透明层+悬浮叉号 ================= */
+    .time-display {
+      width: 100%; text-align: center; font-size: 13px; font-weight: bold;
+      color: #07c160; pointer-events: none; /* 让点击穿透 */
     }
-
+    .time-display.danger {
+      color: #ff4d4f; background: rgba(255, 77, 79, 0.1);
+      border-radius: 4px; padding: 2px 4px; animation: dangerPulse 2s infinite;
+    }
     @keyframes dangerPulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-    .small-btn {
-      background: #f4f5f9;
-      border: none;
-      border-radius: 4px;
-      width: 100%;
-      height: 24px;
-      cursor: pointer;
-      font-size: 12px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 0;
+    /* 透明的原生输入框铺满全格 */
+    input[type="time"].acc-time-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      opacity: 0; cursor: pointer; z-index: 5; margin: 0; padding: 0; border: none;
     }
 
-    .btn-del-acc {
-      background: #fff1f0;
-      color: #ff4d4f;
+    /* 悬浮清空小叉号 */
+    .clear-badge {
+      position: absolute; top: 2px; right: 2px; width: 14px; height: 14px;
+      background-color: rgba(0, 0, 0, 0.15); color: #fff; border-radius: 50%;
+      font-size: 10px; line-height: 14px; text-align: center;
+      cursor: pointer; z-index: 10; font-weight: bold;
     }
+    .clear-badge:active { background-color: #ff4d4f; }
 
-    /* ================= 手机端精准缩放适配 ================= */
+    /* ================= 9. 手机端精准缩放适配 ================= */
     @media screen and (max-width: 768px) {
-      body {
-        padding: 8px;
-      }
-
-      .card {
-        padding: 16px;
-        margin-bottom: 16px;
-      }
-
-      h1 {
-        font-size: 22px;
-        margin-bottom: 20px;
-      }
-
-      .card-title,
-      .card-header-flex .card-title {
-        font-size: 16px;
-      }
-
-      .time-btn {
-        font-size: 13px;
-        padding: 8px 0;
-      }
-
-      table {
-        font-size: 12px;
-      }
-
-      th,
-      td {
-        padding: 8px 6px;
-      }
-
-      .card>div[style*="font-size: 48px"] {
-        font-size: 36px !important;
-        padding: 8px !important;
-      }
-
-      .card>div>h3 {
-        font-size: 18px !important;
-      }
+      body { padding: 8px; }
+      .card { padding: 16px; margin-bottom: 16px; }
+      h1 { font-size: 22px; margin-bottom: 20px; }
+      .card-title, .card-header-flex .card-title { font-size: 16px; }
+      .time-btn { font-size: 13px; padding: 8px 0; }
+      table { font-size: 12px; }
+      th, td { padding: 8px 6px; }
+      .card>div[style*="font-size: 48px"] { font-size: 36px !important; padding: 8px !important; }
+      .card>div>h3 { font-size: 18px !important; }
 
       /* 针对超小屏幕的管家微调 */
-      .acc-td input {
-        font-size: 10px !important;
-      }
-
-      input[type="time"].acc-time-input {
-        font-size: 11px !important;
-      }
-
-      .small-btn {
-        height: 20px;
-        font-size: 10px;
-      }
+      .acc-td input { font-size: 10px !important; }
+      .time-display { font-size: 11px !important; }
+      
+      /* 手机上按钮等比缩小为 24x24px */
+      .icon-btn, .sort-btn-group { width: 24px !important; height: 24px !important; }
+      .icon-btn { font-size: 12px; }
     }
-
-
-    /* ================= 优雅的悬浮清空按钮 ================= */
-    .clear-badge {
-      position: absolute;
-      top: 2px;
-      right: 2px;
-      width: 14px;
-      height: 14px;
-      background-color: rgba(0, 0, 0, 0.15);
-      color: #fff;
-      border-radius: 50%;
-      font-size: 10px;
-      line-height: 13px;
-      text-align: center;
-      cursor: pointer;
-      z-index: 10;
-      font-weight: bold;
-    }
-    /* 点击时变红反馈 */
-    .clear-badge:active {
-      background-color: #ff4d4f;
-    }
-
-
-
   </style>
 </head>
 
@@ -2377,21 +2063,21 @@
         <input value="${acc.fruit || ''}" oninput="updateAccField(${index}, 'fruit', this.value)" placeholder="作物">
       </div>
 
-      <div class="acc-td" style="position: relative;">
-        <input type="time" class="acc-time-input ${isTimeDanger(acc.water1, acc.water1_ts) ? 'danger' : ''}" value="${acc.water1 || ''}" 
-          onchange="updateAccField(${index},'water1',this.value)">
+      <div class="acc-td" style="position: relative; width: 100%; height: 100%;">
+        <div class="time-display ${isTimeDanger(acc.water1, acc.water1_ts) ? 'danger' : ''}">${acc.water1 || '--:--'}</div>
+        <input type="time" class="acc-time-overlay" value="${acc.water1 || ''}" onchange="updateAccField(${index},'water1',this.value)">
         ${acc.water1 ? `<div class="clear-badge" onclick="updateAccField(${index}, 'water1', ''); event.stopPropagation();">×</div>` : ''}
       </div>
 
-      <div class="acc-td" style="position: relative;">
-        <input type="time" class="acc-time-input ${isTimeDanger(acc.water2, acc.water2_ts) ? 'danger' : ''}" value="${acc.water2 || ''}" 
-          onchange="updateAccField(${index},'water2',this.value)">
+      <div class="acc-td" style="position: relative; width: 100%; height: 100%;">
+        <div class="time-display ${isTimeDanger(acc.water2, acc.water2_ts) ? 'danger' : ''}">${acc.water2 || '--:--'}</div>
+        <input type="time" class="acc-time-overlay" value="${acc.water2 || ''}" onchange="updateAccField(${index},'water2',this.value)">
         ${acc.water2 ? `<div class="clear-badge" onclick="updateAccField(${index}, 'water2', ''); event.stopPropagation();">×</div>` : ''}
       </div>
 
-      <div class="acc-td" style="position: relative;">
-        <input type="time" class="acc-time-input ${isTimeDanger(acc.harvest, acc.harvest_ts) ? 'danger' : ''}" value="${acc.harvest || ''}" 
-          onchange="updateAccField(${index},'harvest',this.value)">
+      <div class="acc-td" style="position: relative; width: 100%; height: 100%;">
+        <div class="time-display ${isTimeDanger(acc.harvest, acc.harvest_ts) ? 'danger' : ''}">${acc.harvest || '--:--'}</div>
+        <input type="time" class="acc-time-overlay" value="${acc.harvest || ''}" onchange="updateAccField(${index},'harvest',this.value)">
         ${acc.harvest ? `<div class="clear-badge" onclick="updateAccField(${index}, 'harvest', ''); event.stopPropagation();">×</div>` : ''}
       </div>
       
