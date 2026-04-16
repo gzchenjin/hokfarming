@@ -606,6 +606,32 @@
         font-size: 10px;
       }
     }
+
+
+    /* ================= 优雅的悬浮清空按钮 ================= */
+    .clear-badge {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 14px;
+      height: 14px;
+      background-color: rgba(0, 0, 0, 0.15);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 10px;
+      line-height: 13px;
+      text-align: center;
+      cursor: pointer;
+      z-index: 10;
+      font-weight: bold;
+    }
+    /* 点击时变红反馈 */
+    .clear-badge:active {
+      background-color: #ff4d4f;
+    }
+
+
+
   </style>
 </head>
 
@@ -2343,55 +2369,30 @@
 
       <div class="acc-td">
         <input type="number" style="color:#07c160;font-weight:bold" value="${acc.blessing}" 
-          oninput="updateAccField(${index}, 'blessing', this.value)" 
-          ontouchstart="startTouch(event, ${index}, 'blessing')" 
-          ontouchmove="cancelTouch()" 
-          ontouchend="cancelTouch()" 
-          onmousedown="startTouch(event, ${index}, 'blessing')" 
-          onmouseup="cancelTouch()" 
-          onmouseleave="cancelTouch()" 
-          onclick="return preventClickIfLongPress(event)" 
-          oncontextmenu="return false;">
+          oninput="updateAccField(${index}, 'blessing', this.value)">
       </div>
       
       <div class="acc-td"><div class="custom-cb ${acc.taskDone ? 'checked' : ''}" onclick="toggleAccTask(${index})">✓</div></div>
-      <div class="acc-td fruit-td ${acc.fruit ? 'has-fruit' : ''}"><input value="${acc.fruit || ''}" oninput="updateAccField(${index}, 'fruit', this.value)" placeholder="作物"></div>
+      <div class="acc-td fruit-td ${acc.fruit ? 'has-fruit' : ''}">
+        <input value="${acc.fruit || ''}" oninput="updateAccField(${index}, 'fruit', this.value)" placeholder="作物">
+      </div>
 
-      <div class="acc-td">
+      <div class="acc-td" style="position: relative;">
         <input type="time" class="acc-time-input ${isTimeDanger(acc.water1, acc.water1_ts) ? 'danger' : ''}" value="${acc.water1 || ''}" 
-          onchange="updateAccField(${index},'water1',this.value)" 
-          ontouchstart="startTouch(event, ${index}, 'water1')" 
-          ontouchmove="cancelTouch()" 
-          ontouchend="cancelTouch()" 
-          onmousedown="startTouch(event, ${index}, 'water1')" 
-          onmouseup="cancelTouch()" 
-          onmouseleave="cancelTouch()" 
-          onclick="return preventClickIfLongPress(event)" 
-          oncontextmenu="return false;">
+          onchange="updateAccField(${index},'water1',this.value)">
+        ${acc.water1 ? `<div class="clear-badge" onclick="updateAccField(${index}, 'water1', ''); event.stopPropagation();">×</div>` : ''}
       </div>
-      <div class="acc-td">
+
+      <div class="acc-td" style="position: relative;">
         <input type="time" class="acc-time-input ${isTimeDanger(acc.water2, acc.water2_ts) ? 'danger' : ''}" value="${acc.water2 || ''}" 
-          onchange="updateAccField(${index},'water2',this.value)" 
-          ontouchstart="startTouch(event, ${index}, 'water2')" 
-          ontouchmove="cancelTouch()" 
-          ontouchend="cancelTouch()" 
-          onmousedown="startTouch(event, ${index}, 'water2')" 
-          onmouseup="cancelTouch()" 
-          onmouseleave="cancelTouch()" 
-          onclick="return preventClickIfLongPress(event)" 
-          oncontextmenu="return false;">
+          onchange="updateAccField(${index},'water2',this.value)">
+        ${acc.water2 ? `<div class="clear-badge" onclick="updateAccField(${index}, 'water2', ''); event.stopPropagation();">×</div>` : ''}
       </div>
-      <div class="acc-td">
+
+      <div class="acc-td" style="position: relative;">
         <input type="time" class="acc-time-input ${isTimeDanger(acc.harvest, acc.harvest_ts) ? 'danger' : ''}" value="${acc.harvest || ''}" 
-          onchange="updateAccField(${index},'harvest',this.value)" 
-          ontouchstart="startTouch(event, ${index}, 'harvest')" 
-          ontouchmove="cancelTouch()" 
-          ontouchend="cancelTouch()" 
-          onmousedown="startTouch(event, ${index}, 'harvest')" 
-          onmouseup="cancelTouch()" 
-          onmouseleave="cancelTouch()" 
-          onclick="return preventClickIfLongPress(event)" 
-          oncontextmenu="return false;">
+          onchange="updateAccField(${index},'harvest',this.value)">
+        ${acc.harvest ? `<div class="clear-badge" onclick="updateAccField(${index}, 'harvest', ''); event.stopPropagation();">×</div>` : ''}
       </div>
       
 
