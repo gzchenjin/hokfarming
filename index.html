@@ -2247,17 +2247,18 @@
 
 
 
-    // ================= 完美的“小程序式”长按引擎 (防冲突终极版) =================
+    // ================= 终极长按引擎 (太极打法，绝不激怒 iOS Safari) =================
     window.lpTimer = null;
-    window.isLongPressActive = false;
+    window.lpFired = false; // 记录是否已经触发了长按
 
-    function startLongPress(e, index, field) {
-      window.isLongPressActive = false; 
+    // 1. 手指按下：只负责倒计时，绝对不拦截任何系统事件
+    function startTouch(e, index, field) {
+      window.lpFired = false; 
       
       window.lpTimer = setTimeout(() => {
-        window.isLongPressActive = true; // 标记长按已生效
+        window.lpFired = true; // 倒计时结束，标记长按生效
         
-        // 核心清空逻辑
+        // 执行清空逻辑
         if (field === 'blessing') {
           window.accounts[index].blessing = 0;
         } else {
@@ -2266,39 +2267,42 @@
         }
         
         saveAccs();
+        
+        // 局部更新 DOM 样式
+        const row = document.getElementById('accountListBody').children[index];
+        if (row) {
+          const isDone = window.accounts[index].taskDone && (parseInt(window.accounts[index].blessing) === 0);
+          if (isDone) row.classList.add('name-completed');
+          else row.classList.remove('name-completed');
+        }
+        
+        if (field === 'name') updateSyncDropdowns();
         renderAccountManager();
 
-        if (navigator.vibrate) navigator.vibrate(50); // 手机微震反馈
-
-        // 🌟 终极绝杀：长按触发后，瞬间让输入框失去焦点，彻底掐断 iOS 想弹轮盘的念头
-        if (e && e.target) {
-          e.target.blur();
-        }
-      }, 600); // 600毫秒判定为长按
+        if (navigator.vibrate) navigator.vibrate(50); // 震动反馈
+      }, 600);
     }
 
-    // 滑动表格或鼠标移出时，取消长按判定（防止误删）
-    function cancelLongPress() {
+    // 2. 手指松开/滑动：取消倒计时
+    function cancelTouch() {
       if (window.lpTimer) {
         clearTimeout(window.lpTimer);
         window.lpTimer = null;
       }
     }
 
-    // 核心释放逻辑：只拦截长按，完美放行短按
-    function handleRelease(e) {
-      if (window.lpTimer) clearTimeout(window.lpTimer);
-      
-      if (window.isLongPressActive) {
-        // 🎯 如果是长按松手：强行拦截点击，禁止弹出原生轮盘/键盘
+    // 3. 🌟 核心拦截：只在 click 事件触发时做判断
+    function preventClickIfLongPress(e) {
+      // 如果刚才触发了长按，就强行没收这次点击，不让它弹出轮盘或键盘！
+      if (window.lpFired) {
         e.preventDefault();
         e.stopPropagation();
-        window.isLongPressActive = false;
-        return false;
+        return false; 
       }
-      
-      // 🎯 如果是短按松手：什么都不做！iOS 系统会完美接管并 100% 弹出原生时间轮盘！
+      // 如果没触发长按（短按），这里什么都不做，系统原生轮盘 100% 完美弹出！
     }
+
+
 
     // 专门用于静默刷新同步下拉框，不打断任何表格输入
     function updateSyncDropdowns() {
@@ -2340,51 +2344,53 @@
       <div class="acc-td">
         <input type="number" style="color:#07c160;font-weight:bold" value="${acc.blessing}" 
           oninput="updateAccField(${index}, 'blessing', this.value)" 
-          ontouchstart="startLongPress(event, ${index}, 'blessing')" 
-          ontouchmove="cancelLongPress()" 
-          ontouchend="handleRelease(event)" 
-          onmousedown="startLongPress(event, ${index}, 'blessing')" 
-          onmouseup="handleRelease(event)" 
-          onmouseleave="cancelLongPress()" 
+          ontouchstart="startTouch(event, ${index}, 'blessing')" 
+          ontouchmove="cancelTouch()" 
+          ontouchend="cancelTouch()" 
+          onmousedown="startTouch(event, ${index}, 'blessing')" 
+          onmouseup="cancelTouch()" 
+          onmouseleave="cancelTouch()" 
+          onclick="return preventClickIfLongPress(event)" 
           oncontextmenu="return false;">
       </div>
       
       <div class="acc-td"><div class="custom-cb ${acc.taskDone ? 'checked' : ''}" onclick="toggleAccTask(${index})">✓</div></div>
-      <div class="acc-td fruit-td ${acc.fruit ? 'has-fruit' : ''}">
-        <input value="${acc.fruit || ''}" oninput="updateAccField(${index}, 'fruit', this.value)" placeholder="作物">
-      </div>
+      <div class="acc-td fruit-td ${acc.fruit ? 'has-fruit' : ''}"><input value="${acc.fruit || ''}" oninput="updateAccField(${index}, 'fruit', this.value)" placeholder="作物"></div>
 
       <div class="acc-td">
         <input type="time" class="acc-time-input ${isTimeDanger(acc.water1, acc.water1_ts) ? 'danger' : ''}" value="${acc.water1 || ''}" 
           onchange="updateAccField(${index},'water1',this.value)" 
-          ontouchstart="startLongPress(event, ${index}, 'water1')" 
-          ontouchmove="cancelLongPress()" 
-          ontouchend="handleRelease(event)" 
-          onmousedown="startLongPress(event, ${index}, 'water1')" 
-          onmouseup="handleRelease(event)" 
-          onmouseleave="cancelLongPress()" 
+          ontouchstart="startTouch(event, ${index}, 'water1')" 
+          ontouchmove="cancelTouch()" 
+          ontouchend="cancelTouch()" 
+          onmousedown="startTouch(event, ${index}, 'water1')" 
+          onmouseup="cancelTouch()" 
+          onmouseleave="cancelTouch()" 
+          onclick="return preventClickIfLongPress(event)" 
           oncontextmenu="return false;">
       </div>
       <div class="acc-td">
         <input type="time" class="acc-time-input ${isTimeDanger(acc.water2, acc.water2_ts) ? 'danger' : ''}" value="${acc.water2 || ''}" 
           onchange="updateAccField(${index},'water2',this.value)" 
-          ontouchstart="startLongPress(event, ${index}, 'water2')" 
-          ontouchmove="cancelLongPress()" 
-          ontouchend="handleRelease(event)" 
-          onmousedown="startLongPress(event, ${index}, 'water2')" 
-          onmouseup="handleRelease(event)" 
-          onmouseleave="cancelLongPress()" 
+          ontouchstart="startTouch(event, ${index}, 'water2')" 
+          ontouchmove="cancelTouch()" 
+          ontouchend="cancelTouch()" 
+          onmousedown="startTouch(event, ${index}, 'water2')" 
+          onmouseup="cancelTouch()" 
+          onmouseleave="cancelTouch()" 
+          onclick="return preventClickIfLongPress(event)" 
           oncontextmenu="return false;">
       </div>
       <div class="acc-td">
         <input type="time" class="acc-time-input ${isTimeDanger(acc.harvest, acc.harvest_ts) ? 'danger' : ''}" value="${acc.harvest || ''}" 
           onchange="updateAccField(${index},'harvest',this.value)" 
-          ontouchstart="startLongPress(event, ${index}, 'harvest')" 
-          ontouchmove="cancelLongPress()" 
-          ontouchend="handleRelease(event)" 
-          onmousedown="startLongPress(event, ${index}, 'harvest')" 
-          onmouseup="handleRelease(event)" 
-          onmouseleave="cancelLongPress()" 
+          ontouchstart="startTouch(event, ${index}, 'harvest')" 
+          ontouchmove="cancelTouch()" 
+          ontouchend="cancelTouch()" 
+          onmousedown="startTouch(event, ${index}, 'harvest')" 
+          onmouseup="cancelTouch()" 
+          onmouseleave="cancelTouch()" 
+          onclick="return preventClickIfLongPress(event)" 
           oncontextmenu="return false;">
       </div>
       
