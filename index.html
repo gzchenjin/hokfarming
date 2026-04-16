@@ -489,7 +489,7 @@
       color: #fff;
     }
 
-    /* 原生时间选框防 Safari 偏移 */
+   /* 原生时间选框：防 Safari 偏移与手机端【轮盘失效】的终极修复 */
     input[type="time"].acc-time-input {
       background: transparent !important;
       border: none !important;
@@ -499,37 +499,37 @@
       text-align: center;
       padding: 0 !important;
       margin: 0;
-      cursor: text;
+      cursor: pointer;
       outline: none;
       -webkit-appearance: none;
-      /* 去除苹果默认外观 */
       letter-spacing: -0.5px;
+      position: relative; /* 核心：给透明开关做定位参照 */
     }
 
+    /* 🌟 核心修复：把触发轮盘的按钮变成全透明，并铺满整个单元格 */
     input[type="time"].acc-time-input::-webkit-calendar-picker-indicator {
-      display: none;
+      display: block !important;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      opacity: 0; /* 完全透明看不见，但存在且可点击 */
+      cursor: pointer;
+      background: transparent;
+      color: transparent;
     }
 
-    input[type="time"].acc-time-input.danger {
-      color: #ff4d4f !important;
-      background: rgba(255, 77, 79, 0.1) !important;
-      border-radius: 4px;
-      animation: dangerPulse 2s infinite;
+    input[type="time"].acc-time-input.danger { 
+      color: #ff4d4f !important; 
+      background: rgba(255, 77, 79, 0.1) !important; 
+      border-radius: 4px; 
+      animation: dangerPulse 2s infinite; 
     }
 
-    @keyframes dangerPulse {
-      0% {
-        opacity: 1;
-      }
-
-      50% {
-        opacity: 0.6;
-      }
-
-      100% {
-        opacity: 1;
-      }
-    }
+    @keyframes dangerPulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
     .small-btn {
       background: #f4f5f9;
