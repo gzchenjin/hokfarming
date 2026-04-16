@@ -5,7 +5,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
   <meta name="referrer" content="no-referrer-when-downgrade" />
   <title>王者农场专业务农 | 极限收割计划</title>
   <style>
@@ -705,22 +706,22 @@
 
 
           <div id="saveHarvestContainer" style="display: none; margin-top: 15px;">
-          
-          <div style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center;">
-            <input type="text" id="harvestRecordName" placeholder="给记录取个名字（如XXX-菠萝）"
-              style="flex: 1; padding: 0 10px; height: 40px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; box-sizing: border-box;" />
-            <button class="sync-btn" onclick="saveHarvestRecord()">保存</button>
-          </div>
 
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <select class="acc-sync-select" id="calcSyncSelect" 
-              style="flex: 1; padding: 0 10px; height: 40px; border-radius: 8px; font-size: 14px; box-sizing: border-box; border: 1px solid var(--border);">
-              <option value="">同步计算结果到账号...</option>
-            </select>
-            <button class="sync-btn" onclick="syncCalcToAccount()">同步</button>
+            <div style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center;">
+              <input type="text" id="harvestRecordName" placeholder="给记录取个名字（如XXX-菠萝）"
+                style="flex: 1; padding: 0 10px; height: 40px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; box-sizing: border-box;" />
+              <button class="sync-btn" onclick="saveHarvestRecord()">保存</button>
+            </div>
+
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <select class="acc-sync-select" id="calcSyncSelect"
+                style="flex: 1; padding: 0 10px; height: 40px; border-radius: 8px; font-size: 14px; box-sizing: border-box; border: 1px solid var(--border);">
+                <option value="">同步计算结果到账号...</option>
+              </select>
+              <button class="sync-btn" onclick="syncCalcToAccount()">同步</button>
+            </div>
+
           </div>
-          
-        </div>
 
 
 
@@ -794,7 +795,7 @@
               刷新当前时间
             </button>
 
-            
+
           </div>
         </div>
 
@@ -1229,18 +1230,18 @@
     </div>
   </div>
 
-    <div id="app_download_card" class="card"
-      style="display: none; margin-top: 10px; padding: 20px; background: linear-gradient(135deg, #e8f5e9 0%, #f4f7f6 100%); text-align: center; border: 1px solid #c8e6c9;">
+  <div id="app_download_card" class="card"
+    style="display: none; margin-top: 10px; padding: 20px; background: linear-gradient(135deg, #e8f5e9 0%, #f4f7f6 100%); text-align: center; border: 1px solid #c8e6c9;">
 
-      <h3 style="margin: 0 0 10px 0; color: var(--primary); font-size: 18px">
-        🤖 安卓可通过app，离线使用获取最佳体验
-      </h3>
+    <h3 style="margin: 0 0 10px 0; color: var(--primary); font-size: 18px">
+      🤖 安卓可通过app，离线使用获取最佳体验
+    </h3>
 
-      <a href="https://github.com/gzchenjin2/hokfarming/releases/download/2.0/hokfarming.v2.0.apk" target="_blank"
-        style="display: inline-block; background: var(--primary); color: white; text-decoration: none; padding: 10px 28px; border-radius: 25px; font-size: 14px; font-weight: bold; box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);">
-        ⬇️ 下载 Android 版 (APK)
-      </a>
-    </div>
+    <a href="https://github.com/gzchenjin2/hokfarming/releases/download/2.0/hokfarming.v2.0.apk" target="_blank"
+      style="display: inline-block; background: var(--primary); color: white; text-decoration: none; padding: 10px 28px; border-radius: 25px; font-size: 14px; font-weight: bold; box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);">
+      ⬇️ 下载 Android 版 (APK)
+    </a>
+  </div>
 
 
 
@@ -2248,32 +2249,57 @@
 
 
 
-    // ================= 长按事件引擎 =================
+    // ================= 完美的“小程序式”长按引擎 (修复锁死Bug) =================
     window.lpTimer = null;
+    window.isLongPressActive = false; // 记录是否触发了长按
 
     function startLongPress(e, index, field) {
-      // 开启 600 毫秒的定时器，认定为长按
+      window.isLongPressActive = false;
+      // 开启 600 毫秒计时
       window.lpTimer = setTimeout(() => {
+        window.isLongPressActive = true; // 标记长按已生效
+
+        // 执行清空逻辑
         if (field === 'blessing') {
           window.accounts[index].blessing = 0;
         } else {
           window.accounts[index][field] = '';
-          window.accounts[index][field + '_ts'] = null; // 同步清除系统时间戳
+          window.accounts[index][field + '_ts'] = null;
         }
+
         saveAccs();
+        // 局部更新 DOM 样式，避免重绘整个表格导致掉焦点
+        const row = document.getElementById('accountListBody').children[index];
+        if (row) {
+          // 实时更新背景颜色和变灰逻辑
+          if (field === 'fruit') {
+            const fruitTd = row.querySelector('.fruit-td');
+            fruitTd.classList.remove('has-fruit');
+          }
+          const isDone = window.accounts[index].taskDone && (parseInt(window.accounts[index].blessing) === 0);
+          if (isDone) row.classList.add('name-completed');
+          else row.classList.remove('name-completed');
+        }
+
+        // 渲染同步下拉框（确保名字同步）
+        if (field === 'name') updateSyncDropdowns();
+        // 强制刷新一次表格内容（仅限数值）
         renderAccountManager();
 
-        // 【核心体验优化】：给手机发个震动反馈
-        if (navigator.vibrate) navigator.vibrate(50);
-        
-        // 【核心防弹键盘】：让输入框暂时变成只读并失去焦点，防止长按松开后软键盘弹出来
-        if (e && e.target) {
-          e.target.blur();
-          e.target.readOnly = true; 
-          setTimeout(() => e.target.readOnly = false, 500); // 0.5秒后恢复正常输入能力
-        }
+        if (navigator.vibrate) navigator.vibrate(50); // 震动反馈
       }, 600);
     }
+
+    // 处理松手：如果是长按触发后的松手，拦截默认行为，防止弹键盘
+    function handleRelease(e) {
+      clearTimeout(window.lpTimer);
+      if (window.isLongPressActive) {
+        e.preventDefault(); // 核心：拦截点击事件，不让浏览器弹出选择器或键盘
+        window.isLongPressActive = false;
+        return false;
+      }
+    }
+
 
     // 手指松开、滑开时，取消长按判定（这就变成了普通的短按点击）
     function cancelLongPress() {
@@ -2288,7 +2314,7 @@
       const selects = document.querySelectorAll('.acc-sync-select');
       const optionsHtml = '<option value="">选择账号进行同步...</option>' +
         window.accounts.map(a => `<option value="${a.id}">${a.name || '未命名'}</option>`).join('');
-      
+
       selects.forEach(s => {
         const oldVal = s.value;
         s.innerHTML = optionsHtml;
@@ -2320,7 +2346,17 @@
 
 
 
-      <div class="acc-td"><input type="number" style="color:#07c160;font-weight:bold" value="${acc.blessing}" oninput="updateAccField(${index}, 'blessing', this.value)" oncontextmenu="startLongPress(event, ${index}, 'blessing');return false;" ontouchstart="startLongPress(event, ${index}, 'blessing')" ontouchend="cancelLongPress()" onmousedown="startLongPress(event, ${index}, 'blessing')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()"></div>
+      <div class="acc-td">
+        <input type="number" style="color:#07c160;font-weight:bold" value="${acc.blessing}" 
+          oninput="updateAccField(${index}, 'blessing', this.value)" 
+          ontouchstart="startLongPress(event, ${index}, 'blessing')" 
+          ontouchend="handleRelease(event)" 
+          onmousedown="startLongPress(event, ${index}, 'blessing')" 
+          onmouseup="handleRelease(event)" 
+          oncontextmenu="return false;">
+      </div>
+
+
       <div class="acc-td"><div class="custom-cb ${acc.taskDone ? 'checked' : ''}" onclick="toggleAccTask(${index})">✓</div></div>
       
       <div class="acc-td fruit-td ${acc.fruit ? 'has-fruit' : ''}">
@@ -2332,23 +2368,32 @@
       <div class="acc-td">
         <input type="time" class="acc-time-input ${isTimeDanger(acc.water1, acc.water1_ts) ? 'danger' : ''}" value="${acc.water1 || ''}" 
           onchange="updateAccField(${index},'water1',this.value)" 
-          oncontextmenu="return false;" 
-          ontouchstart="startLongPress(event, ${index}, 'water1')" ontouchend="cancelLongPress()" 
-          onmousedown="startLongPress(event, ${index}, 'water1')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()">
+          ontouchstart="startLongPress(event, ${index}, 'water1')" 
+          ontouchend="handleRelease(event)" 
+          onmousedown="startLongPress(event, ${index}, 'water1')" 
+          onmouseup="handleRelease(event)" 
+          oncontextmenu="return false;">
       </div>
+
+
+
       <div class="acc-td">
         <input type="time" class="acc-time-input ${isTimeDanger(acc.water2, acc.water2_ts) ? 'danger' : ''}" value="${acc.water2 || ''}" 
           onchange="updateAccField(${index},'water2',this.value)" 
-          oncontextmenu="return false;" 
-          ontouchstart="startLongPress(event, ${index}, 'water2')" ontouchend="cancelLongPress()" 
-          onmousedown="startLongPress(event, ${index}, 'water2')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()">
+          ontouchstart="startLongPress(event, ${index}, 'water2')" 
+          ontouchend="handleRelease(event)" 
+          onmousedown="startLongPress(event, ${index}, 'water2')" 
+          onmouseup="handleRelease(event)" 
+          oncontextmenu="return false;">
       </div>
       <div class="acc-td">
         <input type="time" class="acc-time-input ${isTimeDanger(acc.harvest, acc.harvest_ts) ? 'danger' : ''}" value="${acc.harvest || ''}" 
           onchange="updateAccField(${index},'harvest',this.value)" 
-          oncontextmenu="return false;" 
-          ontouchstart="startLongPress(event, ${index}, 'harvest')" ontouchend="cancelLongPress()" 
-          onmousedown="startLongPress(event, ${index}, 'harvest')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()">
+          ontouchstart="startLongPress(event, ${index}, 'harvest')" 
+          ontouchend="handleRelease(event)" 
+          onmousedown="startLongPress(event, ${index}, 'harvest')" 
+          onmouseup="handleRelease(event)" 
+          oncontextmenu="return false;">
       </div>
       
 
@@ -2433,12 +2478,12 @@
 
     function updateAccField(i, f, v) {
       window.accounts[i][f] = v;
-      
+
       // 1. 如果修改的是时间，清空系统时间戳，并重绘表格
       if (f.startsWith('water') || f === 'harvest') {
         window.accounts[i][f + '_ts'] = null;
         saveAccs();
-        renderAccountManager(); 
+        renderAccountManager();
         return;
       }
 
@@ -2487,7 +2532,7 @@
     Object.assign(window, {
       addNewAccount, deleteAcc, updateAccField, toggleAccTask,
       resetDailyAll, resetAccRow, moveAcc, syncTimelineToAccount, syncCalcToAccount,
-      startLongPress,cancelLongPress,
+      startLongPress, cancelLongPress,
     });
 
 
