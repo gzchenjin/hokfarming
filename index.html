@@ -84,8 +84,9 @@
       display: none !important;
     }
 
+    /* 卡片折叠时，三角形转为向上，符合收起直觉 */
     .card-collapsed .toggle-icon {
-      transform: rotate(-90deg);
+      transform: rotate(90deg); 
     }
 
     .card-collapsed .card-header-flex {
@@ -493,40 +494,35 @@
     input[type="time"].acc-time-input {
       background: transparent !important;
       border: none !important;
-      font-size: 12px !important;
+      font-size: 13px !important;
       color: #07c160;
       font-weight: bold;
       text-align: center;
       padding: 0 !important;
       margin: 0;
-      cursor: pointer;
+      width: 100%;
       outline: none;
-      -webkit-appearance: none;
-      letter-spacing: -0.5px;
-      position: relative; /* 核心：给透明开关做定位参照 */
+      position: relative; /* 核心：必须有相对定位 */
+      /* ⚠️ 绝对不能加 -webkit-appearance: none; 否则苹果轮盘必死 */
     }
 
-    /* 🌟 核心修复：把触发轮盘的按钮变成全透明，并铺满整个单元格 */
+    /* 🌟 核心修复：把触发轮盘的系统图标变成全透明，并铺满整个单元格 */
     input[type="time"].acc-time-input::-webkit-calendar-picker-indicator {
       display: block !important;
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
+      top: 0; 
+      left: 0; 
+      width: 100%; 
       height: 100%;
-      margin: 0;
-      padding: 0;
-      opacity: 0; /* 完全透明看不见，但存在且可点击 */
+      opacity: 0; /* 透明但存在，点击必触发轮盘 */
       cursor: pointer;
-      background: transparent;
-      color: transparent;
     }
 
-    input[type="time"].acc-time-input.danger { 
-      color: #ff4d4f !important; 
-      background: rgba(255, 77, 79, 0.1) !important; 
-      border-radius: 4px; 
-      animation: dangerPulse 2s infinite; 
+    input[type="time"].acc-time-input.danger {
+      color: #ff4d4f !important;
+      background: rgba(255, 77, 79, 0.1) !important;
+      border-radius: 4px;
+      animation: dangerPulse 2s infinite;
     }
 
     @keyframes dangerPulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
