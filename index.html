@@ -462,8 +462,13 @@
       background-color: #e5e5ea !important;
     }
 
+    /* 作物列有内容时，单元格背景变黄（满格铺满） */
+    .has-fruit {
+      background-color: #fffac0 !important;
+    }
 
-    
+
+
     .custom-cb {
       width: 16px;
       height: 16px;
@@ -2278,26 +2283,32 @@
       }
     }
 
+    // 专门用于静默刷新同步下拉框，不打断任何表格输入
+    function updateSyncDropdowns() {
+      const selects = document.querySelectorAll('.acc-sync-select');
+      const optionsHtml = '<option value="">选择账号进行同步...</option>' +
+        window.accounts.map(a => `<option value="${a.id}">${a.name || '未命名'}</option>`).join('');
+      
+      selects.forEach(s => {
+        const oldVal = s.value;
+        s.innerHTML = optionsHtml;
+        s.value = oldVal; // 保持原本选中的状态不变
+      });
+    }
+
 
 
 
     // 3. 渲染管家表格
     function renderAccountManager() {
       const listBody = document.getElementById('accountListBody');
-      const selects = document.querySelectorAll('.acc-sync-select');
       if (!listBody) return;
 
       document.getElementById('accountCount').innerText = `${window.accounts.length} Accounts`;
       listBody.innerHTML = '';
 
-      // 更新同步下拉框
-      const optionsHtml = '<option value="">选择账号进行同步...</option>' +
-        window.accounts.map(a => `<option value="${a.id}">${a.name || '未命名'}</option>`).join('');
-      selects.forEach(s => {
-        const oldVal = s.value;
-        s.innerHTML = optionsHtml;
-        s.value = oldVal;
-      });
+      // 🌟 核心修改：直接调用抽离出来的函数，代码更干净
+      updateSyncDropdowns();
 
       window.accounts.forEach((acc, index) => {
         const isDone = acc.taskDone && (parseInt(acc.blessing) === 0);
@@ -2312,12 +2323,11 @@
       <div class="acc-td"><input type="number" style="color:#07c160;font-weight:bold" value="${acc.blessing}" oninput="updateAccField(${index}, 'blessing', this.value)" oncontextmenu="startLongPress(event, ${index}, 'blessing');return false;" ontouchstart="startLongPress(event, ${index}, 'blessing')" ontouchend="cancelLongPress()" onmousedown="startLongPress(event, ${index}, 'blessing')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()"></div>
       <div class="acc-td"><div class="custom-cb ${acc.taskDone ? 'checked' : ''}" onclick="toggleAccTask(${index})">✓</div></div>
       
-      <div class="acc-td" style="padding: 2px;">
-        <input value="${acc.fruit || ''}" 
-               style="${acc.fruit ? 'background-color: #fffac0; border-radius: 4px;' : ''}" 
-               oninput="updateAccField(${index}, 'fruit', this.value); this.style.backgroundColor = this.value ? '#fffac0' : 'transparent';" 
-               placeholder="作物">
-      </div>
+      <div class="acc-td fruit-td ${acc.fruit ? 'has-fruit' : ''}">
+  <input value="${acc.fruit || ''}" 
+         oninput="updateAccField(${index}, 'fruit', this.value)" 
+         placeholder="作物">
+</div>
 
       <div class="acc-td">
         <input type="time" class="acc-time-input ${isTimeDanger(acc.water1, acc.water1_ts) ? 'danger' : ''}" value="${acc.water1 || ''}" 
@@ -2418,10 +2428,13 @@
     // 其他辅助函数
     function addNewAccount() { window.accounts.push({ id: Date.now(), name: '', area: '', blessing: 10, taskDone: false, fruit: '', water1: '', water2: '', harvest: '' }); saveAccs(); renderAccountManager(); }
     function deleteAcc(i) { if (confirm("确定删除？")) { window.accounts.splice(i, 1); saveAccs(); renderAccountManager(); } }
+
+
+
     function updateAccField(i, f, v) {
       window.accounts[i][f] = v;
       
-      // 1. 如果修改的是时间，清空系统时间戳，并且重绘（选时间时不涉及键盘输入，可以重绘）
+      // 1. 如果修改的是时间，清空系统时间戳，并重绘表格
       if (f.startsWith('water') || f === 'harvest') {
         window.accounts[i][f + '_ts'] = null;
         saveAccs();
@@ -2431,17 +2444,31 @@
 
       saveAccs();
 
-      // 2. 核心修复：如果修改的是“祝福”数字，绝不重绘整个表格！
-      // 只通过代码动态给那一行添加/移除完成的样式，保护软键盘不消失
+      // 获取当前行
+      const row = document.getElementById('accountListBody').children[i];
+      if (!row) return;
+
+      // 2. 名字实时同步下拉框
+      if (f === 'name') {
+        updateSyncDropdowns();
+      }
+
+      // 3. 祝福：实时控制名字变灰逻辑（保护键盘）
       if (f === 'blessing') {
-        const row = document.getElementById('accountListBody').children[i];
-        if (row) {
-          const isDone = window.accounts[i].taskDone && (parseInt(window.accounts[i].blessing) === 0);
-          if (isDone) row.classList.add('name-completed');
-          else row.classList.remove('name-completed');
-        }
+        const isDone = window.accounts[i].taskDone && (parseInt(window.accounts[i].blessing) === 0);
+        if (isDone) row.classList.add('name-completed');
+        else row.classList.remove('name-completed');
+      }
+
+      // 4. 🌟 作物：实时控制背景满格变黄（保护键盘）
+      if (f === 'fruit') {
+        const fruitTd = row.querySelector('.fruit-td');
+        if (v.trim() !== '') fruitTd.classList.add('has-fruit');
+        else fruitTd.classList.remove('has-fruit');
       }
     }
+
+
     function toggleAccTask(i) { window.accounts[i].taskDone = !window.accounts[i].taskDone; saveAccs(); renderAccountManager(); }
     function resetDailyAll() { window.accounts.forEach(a => { a.blessing = 10; a.taskDone = false }); saveAccs(); renderAccountManager(); }
     function resetAccRow(i) { window.accounts[i].water1 = ''; window.accounts[i].water2 = ''; window.accounts[i].harvest = ''; saveAccs(); renderAccountManager(); }
