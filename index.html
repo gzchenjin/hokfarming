@@ -5,7 +5,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
   <meta name="referrer" content="no-referrer-when-downgrade" />
   <title>王者农场专业务农 | 极限收割计划</title>
   <style>
@@ -457,15 +457,13 @@
       -webkit-appearance: none;
     }
 
-    .name-completed {
+    /* 仅名字一列的单元格背景变灰（满格铺满），文字保持原样，不划线不褪色 */
+    .name-completed .name-td {
       background-color: #e5e5ea !important;
     }
 
-    .name-completed input {
-      color: #aeaeb2 !important;
-      text-decoration: line-through;
-    }
 
+    
     .custom-cb {
       width: 16px;
       height: 16px;
@@ -986,18 +984,7 @@
     </div>
 
 
-    <div id="app_download_card" class="card"
-      style="display: none; margin-top: 10px; padding: 20px; background: linear-gradient(135deg, #e8f5e9 0%, #f4f7f6 100%); text-align: center; border: 1px solid #c8e6c9;">
 
-      <h3 style="margin: 0 0 10px 0; color: var(--primary); font-size: 18px">
-        🤖 安卓可通过app，离线使用获取最佳体验
-      </h3>
-
-      <a href="https://github.com/gzchenjin2/hokfarming/releases/download/2.0/hokfarming.v2.0.apk" target="_blank"
-        style="display: inline-block; background: var(--primary); color: white; text-decoration: none; padding: 10px 28px; border-radius: 25px; font-size: 14px; font-weight: bold; box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);">
-        ⬇️ 下载 Android 版 (APK)
-      </a>
-    </div>
 
 
     <div class="card account-manager-card" id="card_account">
@@ -1237,7 +1224,18 @@
     </div>
   </div>
 
+    <div id="app_download_card" class="card"
+      style="display: none; margin-top: 10px; padding: 20px; background: linear-gradient(135deg, #e8f5e9 0%, #f4f7f6 100%); text-align: center; border: 1px solid #c8e6c9;">
 
+      <h3 style="margin: 0 0 10px 0; color: var(--primary); font-size: 18px">
+        🤖 安卓可通过app，离线使用获取最佳体验
+      </h3>
+
+      <a href="https://github.com/gzchenjin2/hokfarming/releases/download/2.0/hokfarming.v2.0.apk" target="_blank"
+        style="display: inline-block; background: var(--primary); color: white; text-decoration: none; padding: 10px 28px; border-radius: 25px; font-size: 14px; font-weight: bold; box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);">
+        ⬇️ 下载 Android 版 (APK)
+      </a>
+    </div>
 
 
 
@@ -2243,6 +2241,46 @@
       return diff >= -60 && diff <= 30;
     }
 
+
+
+    // ================= 长按事件引擎 =================
+    window.lpTimer = null;
+
+    function startLongPress(e, index, field) {
+      // 开启 600 毫秒的定时器，认定为长按
+      window.lpTimer = setTimeout(() => {
+        if (field === 'blessing') {
+          window.accounts[index].blessing = 0;
+        } else {
+          window.accounts[index][field] = '';
+          window.accounts[index][field + '_ts'] = null; // 同步清除系统时间戳
+        }
+        saveAccs();
+        renderAccountManager();
+
+        // 【核心体验优化】：给手机发个震动反馈
+        if (navigator.vibrate) navigator.vibrate(50);
+        
+        // 【核心防弹键盘】：让输入框暂时变成只读并失去焦点，防止长按松开后软键盘弹出来
+        if (e && e.target) {
+          e.target.blur();
+          e.target.readOnly = true; 
+          setTimeout(() => e.target.readOnly = false, 500); // 0.5秒后恢复正常输入能力
+        }
+      }, 600);
+    }
+
+    // 手指松开、滑开时，取消长按判定（这就变成了普通的短按点击）
+    function cancelLongPress() {
+      if (window.lpTimer) {
+        clearTimeout(window.lpTimer);
+        window.lpTimer = null;
+      }
+    }
+
+
+
+
     // 3. 渲染管家表格
     function renderAccountManager() {
       const listBody = document.getElementById('accountListBody');
@@ -2267,21 +2305,45 @@
         row.className = `acc-tr ${isDone ? 'name-completed' : ''}`;
         row.innerHTML = `
       <div class="acc-td"><input value="${acc.area || ''}" oninput="updateAccField(${index}, 'area', this.value)" placeholder="-"></div>
-      <div class="acc-td"><input value="${acc.name || ''}" oninput="updateAccField(${index}, 'name', this.value)" placeholder="未命名"></div>
-      <div class="acc-td"><input type="number" style="color:#07c160;font-weight:bold" value="${acc.blessing}" oninput="updateAccField(${index}, 'blessing', this.value)" oncontextmenu="resetBlessing(${index});return false;"></div>
+      <div class="acc-td name-td"><input class="name-input" value="${acc.name || ''}" oninput="updateAccField(${index}, 'name', this.value)" placeholder="未命名"></div>
+
+
+
+      <div class="acc-td"><input type="number" style="color:#07c160;font-weight:bold" value="${acc.blessing}" oninput="updateAccField(${index}, 'blessing', this.value)" oncontextmenu="startLongPress(event, ${index}, 'blessing');return false;" ontouchstart="startLongPress(event, ${index}, 'blessing')" ontouchend="cancelLongPress()" onmousedown="startLongPress(event, ${index}, 'blessing')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()"></div>
       <div class="acc-td"><div class="custom-cb ${acc.taskDone ? 'checked' : ''}" onclick="toggleAccTask(${index})">✓</div></div>
-      <div class="acc-td"><input value="${acc.fruit || ''}" oninput="updateAccField(${index}, 'fruit', this.value)" placeholder="作物"></div>
+      
+      <div class="acc-td" style="padding: 2px;">
+        <input value="${acc.fruit || ''}" 
+               style="${acc.fruit ? 'background-color: #fffac0; border-radius: 4px;' : ''}" 
+               oninput="updateAccField(${index}, 'fruit', this.value); this.style.backgroundColor = this.value ? '#fffac0' : 'transparent';" 
+               placeholder="作物">
+      </div>
 
       <div class="acc-td">
-        <input type="time" class="acc-time-input ${isTimeDanger(acc.water1, acc.water1_ts) ? 'danger' : ''}" value="${acc.water1 || ''}" onchange="updateAccField(${index},'water1',this.value)" oncontextmenu="clearAccTime(${index},'water1');return false;">
+        <input type="time" class="acc-time-input ${isTimeDanger(acc.water1, acc.water1_ts) ? 'danger' : ''}" value="${acc.water1 || ''}" 
+          onchange="updateAccField(${index},'water1',this.value)" 
+          oncontextmenu="return false;" 
+          ontouchstart="startLongPress(event, ${index}, 'water1')" ontouchend="cancelLongPress()" 
+          onmousedown="startLongPress(event, ${index}, 'water1')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()">
       </div>
       <div class="acc-td">
-        <input type="time" class="acc-time-input ${isTimeDanger(acc.water2, acc.water2_ts) ? 'danger' : ''}" value="${acc.water2 || ''}" onchange="updateAccField(${index},'water2',this.value)" oncontextmenu="clearAccTime(${index},'water2');return false;">
+        <input type="time" class="acc-time-input ${isTimeDanger(acc.water2, acc.water2_ts) ? 'danger' : ''}" value="${acc.water2 || ''}" 
+          onchange="updateAccField(${index},'water2',this.value)" 
+          oncontextmenu="return false;" 
+          ontouchstart="startLongPress(event, ${index}, 'water2')" ontouchend="cancelLongPress()" 
+          onmousedown="startLongPress(event, ${index}, 'water2')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()">
       </div>
       <div class="acc-td">
-        <input type="time" class="acc-time-input ${isTimeDanger(acc.harvest, acc.harvest_ts) ? 'danger' : ''}" value="${acc.harvest || ''}" onchange="updateAccField(${index},'harvest',this.value)" oncontextmenu="clearAccTime(${index},'harvest');return false;">
+        <input type="time" class="acc-time-input ${isTimeDanger(acc.harvest, acc.harvest_ts) ? 'danger' : ''}" value="${acc.harvest || ''}" 
+          onchange="updateAccField(${index},'harvest',this.value)" 
+          oncontextmenu="return false;" 
+          ontouchstart="startLongPress(event, ${index}, 'harvest')" ontouchend="cancelLongPress()" 
+          onmousedown="startLongPress(event, ${index}, 'harvest')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()">
       </div>
       
+
+
+
       <div class="acc-td"><button class="small-btn" onclick="resetAccRow(${index})">↺</button></div>
       <div class="acc-td" style="flex-direction:column;gap:2px"><button class="small-btn" style="height:15px;font-size:8px" onclick="moveAcc(${index},-1)">▲</button><button class="small-btn" style="height:15px;font-size:8px" onclick="moveAcc(${index},1)">▼</button></div>
       <div class="acc-td"><button class="small-btn" style="color:red" onclick="deleteAcc(${index})">✕</button></div>
@@ -2358,11 +2420,27 @@
     function deleteAcc(i) { if (confirm("确定删除？")) { window.accounts.splice(i, 1); saveAccs(); renderAccountManager(); } }
     function updateAccField(i, f, v) {
       window.accounts[i][f] = v;
-      // 核心补充：如果用户手动改了时间，必须清空系统时间戳，让它回归 24 小时自动轮转
-      if (f.startsWith('water') || f === 'harvest') window.accounts[i][f + '_ts'] = null;
+      
+      // 1. 如果修改的是时间，清空系统时间戳，并且重绘（选时间时不涉及键盘输入，可以重绘）
+      if (f.startsWith('water') || f === 'harvest') {
+        window.accounts[i][f + '_ts'] = null;
+        saveAccs();
+        renderAccountManager(); 
+        return;
+      }
 
       saveAccs();
-      if (f === 'blessing') renderAccountManager();
+
+      // 2. 核心修复：如果修改的是“祝福”数字，绝不重绘整个表格！
+      // 只通过代码动态给那一行添加/移除完成的样式，保护软键盘不消失
+      if (f === 'blessing') {
+        const row = document.getElementById('accountListBody').children[i];
+        if (row) {
+          const isDone = window.accounts[i].taskDone && (parseInt(window.accounts[i].blessing) === 0);
+          if (isDone) row.classList.add('name-completed');
+          else row.classList.remove('name-completed');
+        }
+      }
     }
     function toggleAccTask(i) { window.accounts[i].taskDone = !window.accounts[i].taskDone; saveAccs(); renderAccountManager(); }
     function resetDailyAll() { window.accounts.forEach(a => { a.blessing = 10; a.taskDone = false }); saveAccs(); renderAccountManager(); }
@@ -2381,7 +2459,8 @@
     // 别忘了在底部的 Object.assign 中暴露这些新函数给 HTML 调用
     Object.assign(window, {
       addNewAccount, deleteAcc, updateAccField, toggleAccTask,
-      resetDailyAll, resetAccRow, moveAcc, syncTimelineToAccount, syncCalcToAccount
+      resetDailyAll, resetAccRow, moveAcc, syncTimelineToAccount, syncCalcToAccount,
+      startLongPress,cancelLongPress,
     });
 
 
