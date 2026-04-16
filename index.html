@@ -318,6 +318,20 @@
       .icon-btn, .sort-btn-group { width: 24px !important; height: 24px !important; }
       .icon-btn { font-size: 12px; }
     }
+
+
+
+    /* ================= 神仙思路：全透明清空覆盖层 ================= */
+    .invisible-clear-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10; /* 层级最高，盖住下面的原生时间输入框 */
+      cursor: pointer;
+      /* background-color: rgba(255, 0, 0, 0.2); 测试时可以把这行取消注释，看看它是不是盖住了全格 */
+    }
   </style>
 </head>
 
@@ -2055,7 +2069,15 @@
 
       <div class="acc-td">
         <input type="number" style="color:#07c160;font-weight:bold" value="${acc.blessing}" 
-          oninput="updateAccField(${index}, 'blessing', this.value)">
+          oninput="updateAccField(${index}, 'blessing', this.value)" 
+          ontouchstart="startTouch(event, ${index}, 'blessing')" 
+          ontouchmove="cancelTouch()" 
+          ontouchend="cancelTouch()" 
+          onmousedown="startTouch(event, ${index}, 'blessing')" 
+          onmouseup="cancelTouch()" 
+          onmouseleave="cancelTouch()" 
+          onclick="return preventClickIfLongPress(event)" 
+          oncontextmenu="return false;">
       </div>
       
       <div class="acc-td"><div class="custom-cb ${acc.taskDone ? 'checked' : ''}" onclick="toggleAccTask(${index})">✓</div></div>
@@ -2066,19 +2088,22 @@
       <div class="acc-td" style="position: relative; width: 100%; height: 100%;">
         <div class="time-display ${isTimeDanger(acc.water1, acc.water1_ts) ? 'danger' : ''}">${acc.water1 || '--:--'}</div>
         <input type="time" class="acc-time-overlay" value="${acc.water1 || ''}" oninput="updateAccField(${index}, 'water1', this.value, this)">
-        ${acc.water1 ? `<div class="clear-badge" onclick="updateAccField(${index}, 'water1', ''); event.stopPropagation();">×</div>` : ''}
+        
+        ${acc.water1 ? `<div class="invisible-clear-layer" onclick="updateAccField(${index}, 'water1', ''); event.stopPropagation();"></div>` : ''}
       </div>
 
       <div class="acc-td" style="position: relative; width: 100%; height: 100%;">
         <div class="time-display ${isTimeDanger(acc.water2, acc.water2_ts) ? 'danger' : ''}">${acc.water2 || '--:--'}</div>
         <input type="time" class="acc-time-overlay" value="${acc.water2 || ''}" oninput="updateAccField(${index}, 'water2', this.value, this)">
-        ${acc.water2 ? `<div class="clear-badge" onclick="updateAccField(${index}, 'water2', ''); event.stopPropagation();">×</div>` : ''}
+        
+        ${acc.water2 ? `<div class="invisible-clear-layer" onclick="updateAccField(${index}, 'water2', ''); event.stopPropagation();"></div>` : ''}
       </div>
 
       <div class="acc-td" style="position: relative; width: 100%; height: 100%;">
         <div class="time-display ${isTimeDanger(acc.harvest, acc.harvest_ts) ? 'danger' : ''}">${acc.harvest || '--:--'}</div>
         <input type="time" class="acc-time-overlay" value="${acc.harvest || ''}" oninput="updateAccField(${index}, 'harvest', this.value, this)">
-        ${acc.harvest ? `<div class="clear-badge" onclick="updateAccField(${index}, 'harvest', ''); event.stopPropagation();">×</div>` : ''}
+        
+        ${acc.harvest ? `<div class="invisible-clear-layer" onclick="updateAccField(${index}, 'harvest', ''); event.stopPropagation();"></div>` : ''}
       </div>
       
 
@@ -2158,6 +2183,61 @@
     // 其他辅助函数
     function addNewAccount() { window.accounts.push({ id: Date.now(), name: '', area: '', blessing: 10, taskDone: false, fruit: '', water1: '', water2: '', harvest: '' }); saveAccs(); renderAccountManager(); }
     function deleteAcc(i) { if (confirm("确定删除？")) { window.accounts.splice(i, 1); saveAccs(); renderAccountManager(); } }
+
+
+
+
+    // ================= 专供“祝福”使用的长按引擎 =================
+    window.lpTimer = null;
+    window.lpFired = false; 
+
+    function startTouch(e, index, field) {
+      window.lpFired = false; 
+      window.lpTimer = setTimeout(() => {
+        window.lpFired = true; 
+        
+        // 祝福专属归零
+        if (field === 'blessing') {
+          window.accounts[index].blessing = 0;
+          saveAccs();
+          
+          // 局部更新样式，保护键盘不掉
+          const row = document.getElementById('accountListBody').children[index];
+          if (row) {
+            const isDone = window.accounts[index].taskDone && (parseInt(window.accounts[index].blessing) === 0);
+            if (isDone) row.classList.add('name-completed');
+            else row.classList.remove('name-completed');
+          }
+          if (navigator.vibrate) navigator.vibrate(50); // 震动反馈
+          
+          // 强制让输入框失去焦点，防止长按后弹键盘
+          if (e && e.target) e.target.blur(); 
+        }
+      }, 600);
+    }
+
+    function cancelTouch() {
+      if (window.lpTimer) {
+        clearTimeout(window.lpTimer);
+        window.lpTimer = null;
+      }
+    }
+
+    function preventClickIfLongPress(e) {
+      if (window.lpFired) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false; 
+      }
+    }
+
+
+
+
+
+
+
+
 
 
 
