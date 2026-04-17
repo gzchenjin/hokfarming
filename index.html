@@ -1955,33 +1955,37 @@
     // 1. 初始化数据
     window.accounts = JSON.parse(localStorage.getItem('farm_accounts') || '[]');
 
-    // 2. 核心：判断时间危险区 (加入底层时间戳，完美解决跨日Bug)
+    // 2. 核心：判断时间危险区 (修复“过期后变绿”的漏洞)
     function isTimeDanger(targetTime, targetTs) {
       if (!targetTime) return false;
       const now = new Date();
 
-      // 1. 如果有系统同步带过来的精确时间戳，优先用时间戳
+      // 情况 A：有精确时间戳（从排期器或计算器同步过来的）
       if (targetTs) {
         const diffMins = (targetTs - now.getTime()) / 60000;
-        return diffMins >= -60 && diffMins <= 30;
+        // 🌟 核心修复：只要离目标时间不到 30 分钟，或者【无论过期了多久】（负数），统统标红！
+        // 只有 diffMins > 30（还在很久以后的未来）才是绿色。
+        return diffMins <= 30; 
       }
 
-      // 2. 如果是手动输入的 HH:mm，执行跨日判定
+      // 情况 B：手动输入的 HH:mm（只有时间，没有日期）
       const [h, m] = targetTime.split(':').map(Number);
       let diff = (h * 60 + m) - (now.getHours() * 60 + now.getMinutes());
 
-      // 核心：处理跨日误差（1440分钟为一圈）
-      if (diff < -720) diff += 1440; // 处理“现在23点，目标0点”
-      if (diff > 720) diff -= 1440;  // 处理“现在0点，目标23点”
+      // 处理跨日误差（1440分钟为一圈）
+      if (diff < -720) diff += 1440; 
+      if (diff > 720) diff -= 1440;  
 
-      // 判定区间：已经过了最多60分钟，或还有最多30分钟到期
-      return diff >= -60 && diff <= 30;
+      // 🌟 核心修复：针对手动输入的时间，我们将“过期追杀期”从 1 小时大幅延长到 8 小时（-480分钟）。
+      // 为什么不无限长？因为没有日期，超过 12 小时系统会分不清你是“昨天错过了”，还是“定了明天的闹钟”。
+      // 8 个小时足够覆盖日常漏浇水的所有情况了！
+      return diff >= -480 && diff <= 30;
     }
 
 
 
     // ================= 方便配置的全局参数 =================
-    window.CLEAR_HOLD_TIME = 300; // 👈 在这里修改长按清空的时间，500 = 0.5秒，1000 = 1秒
+    window.CLEAR_HOLD_TIME = 500; // 👈 在这里修改长按清空的时间，500 = 0.5秒，1000 = 1秒
 
     // ================= 透明覆盖层专属长按引擎 =================
     window.clearTimer = null;
