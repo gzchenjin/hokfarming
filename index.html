@@ -272,11 +272,16 @@
     .sort-btn:active { background: #dcdcdc; }
     .sort-btn:first-child { border-bottom: 1px solid #fff; }
 
-    /* ================= 8. 终极时间选择器：透明层+悬浮叉号 ================= */
+    /* ================= 8. 终极时间选择器：透明层 ================= */
     .time-display {
       width: 100%; text-align: center; font-size: 13px; font-weight: bold;
       color: #07c160; pointer-events: none; /* 让点击穿透 */
+      /* 👇 核心修复：严禁长按时选中这行绿色的文字 */
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none; /* 禁用苹果的长按放大镜和菜单 */
     }
+    
     .time-display.danger {
       color: #ff4d4f; background: rgba(255, 77, 79, 0.1);
       border-radius: 4px; padding: 2px 4px; animation: dangerPulse 2s infinite;
@@ -287,6 +292,17 @@
     input[type="time"].acc-time-overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       opacity: 0; cursor: pointer; z-index: 5; margin: 0; padding: 0; border: none;
+    }
+
+    /* ================= 神仙思路：全透明清空覆盖层 ================= */
+    .invisible-clear-layer {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 10; cursor: pointer;
+      /* 👇 核心修复：严禁长按透明层时触发系统文本选择 */
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent; /* 顺手干掉安卓机点击时自带的灰色方块闪烁 */
     }
 
     /* 悬浮清空小叉号 */
@@ -321,17 +337,7 @@
 
 
 
-    /* ================= 神仙思路：全透明清空覆盖层 ================= */
-    .invisible-clear-layer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 10; /* 层级最高，盖住下面的原生时间输入框 */
-      cursor: pointer;
-      /* background-color: rgba(255, 0, 0, 0.2); 测试时可以把这行取消注释，看看它是不是盖住了全格 */
-    }
+    
   </style>
 </head>
 
@@ -2263,7 +2269,7 @@
           }
           if (navigator.vibrate) navigator.vibrate(50); // 震动反馈
         }
-      }, 600);
+      }, window.CLEAR_HOLD_TIME); // 🌟 改为跟随全局配置！
     }
 
     function cancelTouch() {
