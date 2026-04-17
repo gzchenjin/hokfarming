@@ -2294,30 +2294,41 @@
    function updateAccField(i, f, v, el) {
       window.accounts[i][f] = v;
       
-      // 1. 如果修改的是时间
       if (f.startsWith('water') || f === 'harvest') {
         window.accounts[i][f + '_ts'] = null;
         saveAccs();
         
         if (el) {
           const td = el.parentElement;
-          // 局部更新文字
           const displayDiv = td.querySelector('.time-display');
-          if (displayDiv) displayDiv.innerText = v || '--:--';
+          if (displayDiv) {
+            displayDiv.innerText = v || '--:--';
+            // 同步更新颜色状态
+            if (isTimeDanger(v, null)) displayDiv.classList.add('danger');
+            else displayDiv.classList.remove('danger');
+          }
           
-          // 🌟 清除冗余：动态显示/隐藏“全透明隐形层” (彻底抛弃旧版小叉号)
           let layer = td.querySelector('.invisible-clear-layer');
+          // 🌟 修复关键：动态生成的层必须和初始渲染的事件完全一致
           if (v && !layer) {
-            td.insertAdjacentHTML('beforeend', `<div class="invisible-clear-layer" onclick="updateAccField(${i}, '${f}', ''); event.stopPropagation();"></div>`);
+            const layerHtml = `<div class="invisible-clear-layer" 
+              ontouchstart="startClearPress(event, ${i}, '${f}')" 
+              ontouchmove="cancelClearPress(event)" 
+              ontouchend="cancelClearPress(event)" 
+              onmousedown="startClearPress(event, ${i}, '${f}')" 
+              onmouseup="cancelClearPress(event)" 
+              onmouseleave="cancelClearPress(event)" 
+              onclick="handleClearClick(event)"></div>`;
+            td.insertAdjacentHTML('beforeend', layerHtml);
           } else if (!v && layer) {
             layer.remove();
           }
         } else {
-          // 如果是清空操作，重绘表格
           renderAccountManager();
         }
         return;
       }
+      // ... 其余逻辑保持不变
 
       saveAccs();
       
